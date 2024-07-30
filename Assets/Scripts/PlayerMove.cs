@@ -3,14 +3,14 @@
 public class PlayerMove : MonoBehaviour
 {
     public float speed = 5f; // Oyuncunun hareket hızı
-    public float jumpForce = 10f; // Zıplama kuvveti
     public float laneDistance = 2f; // Şeritler arası mesafe
+    public float swipeThreshold = 100f; // Kaydırma hareketi için gereken minimum mesafe
 
-    private bool isGrounded; // Oyuncunun zeminde olup olmadığını kontrol eder
-    private float horizontalInput; // Yatay girdi
     private int currentLane = 1; // Mevcut şerit (0: sol, 1: orta, 2: sağ)
 
     private Rigidbody rb;
+    private Vector2 startTouchPosition, swipeDelta;
+    private bool isSwiping;
 
     void Start()
     {
@@ -19,51 +19,11 @@ public class PlayerMove : MonoBehaviour
 
     void Update()
     {
-        // Mobil giriş kontrolü
-        if (Input.touchCount > 0)
-        {
-            Touch touch = Input.GetTouch(0);
-
-            if (touch.phase == TouchPhase.Began)
-            {
-                if (touch.position.x < Screen.width / 2)
-                {
-                    MoveLeft();
-                }
-                else
-                {
-                    MoveRight();
-                }
-            }
-
-            if (touch.phase == TouchPhase.Ended)
-            {
-                Jump();
-            }
-        }
-
-        // Fare giriş kontrolü
-        if (Input.GetMouseButtonDown(0))
-        {
-            if (Input.mousePosition.x < Screen.width / 2)
-            {
-                MoveLeft();
-            }
-            else
-            {
-                MoveRight();
-            }
-        }
-
-        if (Input.GetMouseButtonDown(1))
-        {
-            Jump();
-        }
+        DetectSwipe();
     }
 
     private void FixedUpdate()
     {
-        // Hareketi uygulama
         Vector3 targetPosition = transform.position.z * transform.forward + transform.position.y * transform.up;
 
         if (currentLane == 0)
@@ -76,6 +36,88 @@ public class PlayerMove : MonoBehaviour
         }
 
         transform.position = Vector3.Lerp(transform.position, targetPosition, Time.fixedDeltaTime * speed);
+    }
+
+    private void DetectSwipe()
+    {
+        if (Input.touchCount > 0)
+        {
+            Touch touch = Input.GetTouch(0);
+
+            if (touch.phase == TouchPhase.Began)
+            {
+                isSwiping = true;
+                startTouchPosition = touch.position;
+            }
+            else if (touch.phase == TouchPhase.Moved && isSwiping)
+            {
+                swipeDelta = touch.position - startTouchPosition;
+
+                if (swipeDelta.magnitude > swipeThreshold)
+                {
+                    ProcessSwipe(swipeDelta);
+                    ResetSwipe();
+                }
+            }
+            else if (touch.phase == TouchPhase.Ended || touch.phase == TouchPhase.Canceled)
+            {
+                ResetSwipe();
+            }
+        }
+
+        // Fare girişleri için
+        if (Input.GetMouseButtonDown(0))
+        {
+            isSwiping = true;
+            startTouchPosition = Input.mousePosition;
+        }
+        else if (Input.GetMouseButton(0) && isSwiping)
+        {
+            swipeDelta = (Vector2)Input.mousePosition - startTouchPosition;
+
+            if (swipeDelta.magnitude > swipeThreshold)
+            {
+                ProcessSwipe(swipeDelta);
+                ResetSwipe();
+            }
+        }
+        else if (Input.GetMouseButtonUp(0))
+        {
+            ResetSwipe();
+        }
+    }
+
+    private void ProcessSwipe(Vector2 swipeDelta)
+    {
+        if (Mathf.Abs(swipeDelta.x) > Mathf.Abs(swipeDelta.y))
+        {
+            if (swipeDelta.x < 0)
+            {
+                MoveLeft();
+            }
+            else
+            {
+                MoveRight();
+            }
+        }
+        else
+        {
+            if (swipeDelta.y > 0)
+            {
+                Jump();
+            }
+            else if (swipeDelta.y < 0)
+            {
+                Crouch();
+            }
+        }
+    }
+
+    private void ResetSwipe()
+    {
+        startTouchPosition = Vector2.zero;
+        swipeDelta = Vector2.zero;
+        isSwiping = false;
     }
 
     private void MoveLeft()
@@ -96,18 +138,11 @@ public class PlayerMove : MonoBehaviour
 
     private void Jump()
     {
-        if (isGrounded)
-        {
-            rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
-            isGrounded = false;
-        }
+        Debug.Log("Jump detected");
     }
 
-    private void OnCollisionEnter(Collision collision)
+    private void Crouch()
     {
-        if (collision.gameObject.CompareTag("Ground"))
-        {
-            isGrounded = true;
-        }
+        Debug.Log("Crouch detected");
     }
 }

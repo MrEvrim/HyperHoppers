@@ -194,8 +194,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speed: 5
-  jumpForce: 10
-  laneDistance: 2
+  laneDistance: 1.8
+  swipeThreshold: 100
 --- !u!1001 &489892030
 PrefabInstance:
   m_ObjectHideFlags: 0
