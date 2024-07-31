@@ -2,6 +2,7 @@
 
 public class PlayerMove : MonoBehaviour
 {
+    public Animator animator;
     public float speed = 5f; // Oyuncunun hareket hızı
     public float laneDistance = 2f; // Şeritler arası mesafe
     public float swipeThreshold = 100f; // Kaydırma hareketi için gereken minimum mesafe
@@ -15,6 +16,8 @@ public class PlayerMove : MonoBehaviour
     void Start()
     {
         rb = GetComponent<Rigidbody>();
+        animator = GetComponent<Animator>();
+
     }
 
     void Update()
@@ -138,11 +141,13 @@ public class PlayerMove : MonoBehaviour
 
     private void Jump()
     {
+        animator.SetTrigger("isJump");
         Debug.Log("Jump detected");
     }
 
     private void Crouch()
     {
+        animator.SetTrigger("isTrumple");
         Debug.Log("Crouch detected");
     }
 }
