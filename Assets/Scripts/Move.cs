@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class Move : MonoBehaviour
 {
+    public float groundSpeed = -5;
     void Update()
     {
         transform.position += new Vector3(0, 0, -5) * Time.deltaTime;
