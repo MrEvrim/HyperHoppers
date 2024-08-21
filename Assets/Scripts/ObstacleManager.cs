@@ -3,9 +3,9 @@ using System.Collections.Generic;
 
 public class ObstacleManager : MonoBehaviour
 {
-    public List<GameObject> obstaclePrefabs; // Sahneye spawn edilecek prefab'lerin listesi
-    public Transform[] spawnPoints; // Prefab'lerin spawn edileceği sabit pozisyonlar
-    public float spawnInterval = 2.0f; // Yeni engelin spawn edilme aralığı
+    public List<GameObject> obstaclePrefabs; 
+    public Transform[] spawnPoints; 
+    public float spawnInterval = 2.0f; 
 
     private float spawnTimer;
 

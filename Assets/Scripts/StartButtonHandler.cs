@@ -3,27 +3,31 @@ using System.Collections;
 
 public class StartButtonHandler : MonoBehaviour
 {
-    public MonoBehaviour script1;  // Aktifleştirilecek ilk script
-    public MonoBehaviour script2;  // Aktifleştirilecek ikinci script
-    public Animator animator;   // Animasyonun bağlı olduğu animator
-    public Transform targetPosition; // Kameranın taşınacağı hedef pozisyon
-    public float moveDuration = 2.0f; // Hareket süresi
-    public GameObject panel; // Kapatılacak panel
+    public MonoBehaviour script1;  
+    public MonoBehaviour script2;  
+    public MonoBehaviour script3;
+    public MonoBehaviour script4;
+    public Animator animator;  
+    public Transform targetPosition;
+    public Transform deadTargetPosition;
+    public float moveDuration = 2.0f; 
+    public GameObject panel; 
+    private PlayerMove playerMove;
 
     public void OnStartButtonClicked()
     {
-        // Scriptleri aktif hale getir
         script1.enabled = true;
         script2.enabled = true;
+        script3.enabled = true;
+        script4.enabled = true;
 
-        // Animasyonun "Start" trigger'ını tetikle
         animator.SetTrigger("isStart");
 
-        // Paneli kapat
         panel.SetActive(false);
 
-        // Kamerayı yavaş yavaş hedef pozisyona taşı
         StartCoroutine(MoveCameraToPosition());
+
+        playerMove = FindObjectOfType<PlayerMove>();
     }
 
     private IEnumerator MoveCameraToPosition()
@@ -34,18 +38,23 @@ public class StartButtonHandler : MonoBehaviour
 
         while (elapsedTime < moveDuration)
         {
-            // Lerp the position
             Camera.main.transform.position = Vector3.Lerp(startingPosition, targetPosition.position, elapsedTime / moveDuration);
 
-            // Lerp the rotation using Quaternion
             Camera.main.transform.rotation = Quaternion.Lerp(startingRotation, targetPosition.rotation, elapsedTime / moveDuration);
 
             elapsedTime += Time.deltaTime;
             yield return null;
         }
-
-        // Ensure final position and rotation are exact
         Camera.main.transform.position = targetPosition.position;
         Camera.main.transform.rotation = targetPosition.rotation;
+    }
+
+    private void Update()
+    {
+        if (playerMove != null && playerMove.isDead)
+        {
+            Camera.main.transform.position = deadTargetPosition.position;
+            Camera.main.transform.rotation = deadTargetPosition.rotation;
+        }
     }
 }

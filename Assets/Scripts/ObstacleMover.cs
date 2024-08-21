@@ -2,16 +2,15 @@
 
 public class ObstacleMover : MonoBehaviour
 {
-    private Move moveScript; // Move script referansı
-    private float speed; // Engellerin hareket hızı
+    private Move moveScript; 
+    private float speed; 
 
     void Start()
     {
-        // Move script'ini bul ve hız değerini al
         moveScript = FindObjectOfType<Move>();
         if (moveScript != null)
         {
-            speed = moveScript.groundSpeed; // Move script'indeki groundSpeed değerini al
+            speed = moveScript.groundSpeed; 
         }
         else
         {
@@ -21,7 +20,6 @@ public class ObstacleMover : MonoBehaviour
 
     void Update()
     {
-        // Z yönünde hareket et
         transform.Translate(Vector3.back * -speed * Time.deltaTime);
     }
 }

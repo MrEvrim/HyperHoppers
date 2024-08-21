@@ -3,42 +3,55 @@
 public class PlayerMove : MonoBehaviour
 {
     public Animator animator;
-    public float speed = 5f; // Oyuncunun hareket hızı
-    public float laneDistance = 2f; // Şeritler arası mesafe
-    public float swipeThreshold = 100f; // Kaydırma hareketi için gereken minimum mesafe
+    public float speed = 5f; 
+    public float laneDistance = 2f; 
+    public float swipeThreshold = 100f; 
+    public float jumpHeight = 2f; 
+    public float jumpDuration = 0.5f; 
 
-    private int currentLane = 1; // Mevcut şerit (0: sol, 1: orta, 2: sağ)
+    public MonoBehaviour gameManager;
 
+    private int currentLane = 1; 
     private Rigidbody rb;
     private Vector2 startTouchPosition, swipeDelta;
     private bool isSwiping;
+    public bool isDead = false; 
+    private bool isJumping = false; 
+
+    public StartButtonHandler startButtonHandler;
 
     void Start()
     {
         rb = GetComponent<Rigidbody>();
         animator = GetComponent<Animator>();
-
+        startButtonHandler = FindObjectOfType<StartButtonHandler>();
     }
 
     void Update()
     {
-        DetectSwipe();
+        if (!isDead)
+        {
+            DetectSwipe();
+        }
     }
 
     private void FixedUpdate()
     {
-        Vector3 targetPosition = transform.position.z * transform.forward + transform.position.y * transform.up;
-
-        if (currentLane == 0)
+        if (!isDead && !isJumping) 
         {
-            targetPosition += Vector3.left * laneDistance;
-        }
-        else if (currentLane == 2)
-        {
-            targetPosition += Vector3.right * laneDistance;
-        }
+            Vector3 targetPosition = transform.position.z * transform.forward + transform.position.y * transform.up;
 
-        transform.position = Vector3.Lerp(transform.position, targetPosition, Time.fixedDeltaTime * speed);
+            if (currentLane == 0)
+            {
+                targetPosition += Vector3.left * laneDistance;
+            }
+            else if (currentLane == 2)
+            {
+                targetPosition += Vector3.right * laneDistance;
+            }
+
+            transform.position = Vector3.Lerp(transform.position, targetPosition, Time.fixedDeltaTime * speed);
+        }
     }
 
     private void DetectSwipe()
@@ -141,13 +154,59 @@ public class PlayerMove : MonoBehaviour
 
     private void Jump()
     {
-        animator.SetTrigger("isJump");
-        Debug.Log("Jump detected");
+        if (!isJumping) // Oyuncu zaten zıplamıyorsa
+        {
+            animator.SetTrigger("isJump");
+            StartCoroutine(JumpRoutine());
+        }
+    }
+
+    private System.Collections.IEnumerator JumpRoutine()
+    {
+        isJumping = true;
+        Vector3 startPos = transform.position;
+        Vector3 jumpApex = new Vector3(startPos.x, startPos.y + jumpHeight, startPos.z);
+
+        float elapsedTime = 0;
+
+        // Yükseliş
+        while (elapsedTime < jumpDuration / 2f)
+        {
+            transform.position = Vector3.Lerp(startPos, jumpApex, (elapsedTime / (jumpDuration / 2f)));
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+
+        elapsedTime = 0;
+
+        // Düşüş
+        while (elapsedTime < jumpDuration / 2f)
+        {
+            transform.position = Vector3.Lerp(jumpApex, startPos, (elapsedTime / (jumpDuration / 2f)));
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+
+        transform.position = startPos; // Pozisyonu tam olarak başlangıç noktasına getir
+        isJumping = false;
     }
 
     private void Crouch()
     {
         animator.SetTrigger("isTrumple");
         Debug.Log("Crouch detected");
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Enemy"))
+        {
+            Destroy(other.gameObject);
+            isDead = true; 
+            animator.SetTrigger("isDead"); 
+            Debug.Log("Player has died.");
+
+            Time.timeScale = 0f;
+        }
     }
 }
